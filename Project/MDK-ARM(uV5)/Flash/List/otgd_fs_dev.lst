@@ -1,0 +1,372 @@
+L 1 "..\..\Libraries\STM32_USB-FS-Device_Driver\src\otgd_fs_dev.c"
+N/******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
+N* File Name          : otgd_fs_dev.c
+N* Author             : STMicroelectronics
+N* Version            : V3.3.0
+N* Date               : 21-March-2011
+N* Description        : High Layer device mode interface and wrapping layer.
+N********************************************************************************
+N* THE PRESENT SOFTWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+N* WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+N* AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+N* INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+N* CONTENT OF SUCH SOFTWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+N* INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+N*******************************************************************************/
+N
+N#ifdef STM32F10X_CL
+S
+S/* Includes ------------------------------------------------------------------*/
+S#include "otgd_fs_dev.h"
+S#include "usb_regs.h"
+S#include "otgd_fs_cal.h"
+S#include "otgd_fs_pcd.h"
+S
+S/* Private typedef -----------------------------------------------------------*/
+S/* Private define ------------------------------------------------------------*/
+S/* Private macro -------------------------------------------------------------*/
+S/* Private variables ---------------------------------------------------------*/
+S/* Extern variables ----------------------------------------------------------*/
+S/* Private function prototypes -----------------------------------------------*/
+S
+S/* Private functions ---------------------------------------------------------*/
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_Init
+S* Description    : Initialize the OTG Device IP and EP0.
+S* Input          : None.
+S* Output         : None.
+S* Return         : None. 
+S*******************************************************************************/
+Svoid OTG_DEV_Init(void)
+S{
+S  EP_DESCRIPTOR ep_descriptor;
+S  
+S  /* Init peripheral driver */
+S  PCD_Init();
+S  
+S  /* Configure and open the IN control EP0 */ 
+S  ep_descriptor.bEndpointAddress = 0x80;
+S  ep_descriptor.wMaxPacketSize = 64;  
+S  ep_descriptor.bmAttributes = USB_ENDPOINT_XFER_CONTROL; 
+S  PCD_EP_Open(&ep_descriptor);
+S  
+S  /* Configure and open the OUT control EP0 */ 
+S  ep_descriptor.bEndpointAddress = 0x00;
+S  PCD_EP_Open(&ep_descriptor);    
+S
+S  OTGD_FS_EPStartXfer(PCD_GetOutEP(0));
+S  
+S  /* Enable EP0 to start receiving setup packets */  
+S  PCD_EP0_OutStart();  
+S  
+S  /* Enable USB Global interrupt */
+S  OTGD_FS_EnableGlobalInt();     
+S}
+S
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_EP_Init
+S* Description    : Initialize the selected endpoint parameters
+S* Input          : - bEpAdd: address of the endpoint (epnum|epdir) 
+S*                     example: EP1 OUT -> 0x01 and EP1 IN 0x81.
+S*                  - bEpType: OTG_DEV_EP_TYPE_CONTROL, OTG_DEV_EP_TYPE_ISOC, 
+S*                     OTG_DEV_EP_TYPE_BULK, OTG_DEV_EP_TYPE_INT
+S*                  - wEpMaxPackSize: The EP max packet size.
+S* Output         : None.
+S* Return         : Status: New status to be set for the endpoint: 
+S*******************************************************************************/
+Svoid OTG_DEV_EP_Init(uint8_t bEpAdd, uint8_t bEpType, uint16_t wEpMaxPackSize)
+S{
+S  EP_DESCRIPTOR ep_descriptor;
+S  USB_OTG_EP *ep;
+S  
+S  /* Set the EP parameters in a structure */
+S  ep_descriptor.bEndpointAddress = bEpAdd;
+S  ep_descriptor.bmAttributes = bEpType; 
+S  ep_descriptor.wMaxPacketSize = wEpMaxPackSize;
+S
+S  PCD_EP_Flush(bEpAdd);
+S  
+S  /* Open the EP with entered parameters */   
+S  PCD_EP_Open(&ep_descriptor); 
+S  
+S  /* Activate the EP if it is an OUT EP */
+S  if ((bEpAdd & 0x80) == 0)
+S  {
+S    ep = PCD_GetOutEP(bEpAdd & 0x7F);
+S    OTGD_FS_EPStartXfer(ep);
+S  } 
+S  else
+S  {
+S    ep = PCD_GetInEP(bEpAdd & 0x7F);
+S    ep->even_odd_frame = 0;    
+S    OTG_DEV_SetEPTxStatus(bEpAdd, DEV_EP_TX_NAK);
+S  }
+S  
+S}
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_GetEPTxStatus
+S* Description    : Set the related endpoint status.
+S* Input          : Number of the endpoint.
+S* Output         : None.
+S* Return         : Status: New status to be set for the endpoint: 
+S*******************************************************************************/
+Suint32_t OTG_DEV_GetEPTxStatus(uint8_t bEpnum) 
+S{
+S  USB_OTG_EP *ep;
+S  uint32_t status = 0;
+S  
+S  ep = PCD_GetInEP(bEpnum & 0x7F); 
+S  
+S  status = OTGD_FS_GetEPStatus(ep); 
+S  
+S  return status; 
+S}
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_GetEPRxStatus
+S* Description    : returns the related endpoint status.
+S* Input          : Number of the endpoint.
+S* Output         : None.
+S* Return         : Status: New status to be set for the endpoint: 
+S*******************************************************************************/
+Suint32_t OTG_DEV_GetEPRxStatus(uint8_t bEpnum)
+S{
+S  USB_OTG_EP *ep;
+S  uint32_t status = 0;
+S  
+S  ep = PCD_GetOutEP(bEpnum & 0x7F); 
+S  
+S  status = OTGD_FS_GetEPStatus(ep); 
+S  
+S  return status;
+S}
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_SetEPTxStatus
+S* Description    : Sets the related endpoint status.
+S* Input          : - bEpnum: Number of the endpoint.
+S*                  - Status: New status to be set for the endpoint. It can be
+S*                    DEV_EP_TX_VALID, DEV_EP_TX_STALL, DEV_EP_TX_NAK or 
+S*                    DEV_EP_TX_DISABLE.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid OTG_DEV_SetEPTxStatus(uint8_t bEpnum, uint32_t Status) 
+S{
+S  USB_OTG_EP *ep;
+S   
+S  ep = PCD_GetInEP(bEpnum & 0x7F); 
+S  
+S  if ((bEpnum == 0x80) && (Status == DEV_EP_TX_STALL))
+S  {
+S    ep->is_in = 1;
+S  }
+S  
+S  OTGD_FS_SetEPStatus(ep, Status); 
+S}
+S
+S/*******************************************************************************
+S* Function Name  : OTG_DEV_SetEPRxStatus
+S* Description    : Sets the related endpoint status.
+S* Input          : - bEpnum: Number of the endpoint.
+S*                  - Status: New status to be set for the endpoint. It can be
+S*                    DEV_EP_RX_VALID, DEV_EP_RX_STALL, DEV_EP_RX_NAK or 
+S*                    DEV_EP_RX_DISABLE.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid OTG_DEV_SetEPRxStatus(uint8_t bEpnum, uint32_t Status)                           
+S{
+S  USB_OTG_EP *ep;
+S 
+S  ep = PCD_GetOutEP(bEpnum & 0x7F); 
+S  
+S  OTGD_FS_SetEPStatus(ep, Status); 
+S}
+S
+S/*******************************************************************************
+S* Function Name  : USB_DevDisconnect
+S* Description    : Disconnect the Pull-up resist.
+S* Input          : bEpNum: Endpoint Number. 
+S*                  wState: new state.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid USB_DevDisconnect(void)
+S{
+S  PCD_DevDisconnect();
+S}
+S
+S/*******************************************************************************
+S* Function Name  : USB_DevConnect
+S* Description    : Disconnect the .
+S* Input          : bEpNum: Endpoint Number. 
+S*                  wState: new state.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid USB_DevConnect(void)
+S{
+S  PCD_DevConnect();
+S}
+S
+S/*-*-*-*-*-*-*-*-*-* Replace the usb_regs.h defines -*-*-*-*-*-*-*-*-*-*-*-*-*/
+S
+S/*******************************************************************************
+S* Function Name  : SetEPTxStatus
+S* Description    : Set the status of Tx endpoint.
+S* Input          : bEpNum: Endpoint Number. 
+S*                  wState: new state.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPTxStatus(uint8_t bEpNum, uint16_t wState)
+S{
+S  _SetEPTxStatus(bEpNum, wState);
+S}
+S
+S/*******************************************************************************
+S* Function Name  : SetEPRxStatus
+S* Description    : Set the status of Rx endpoint.
+S* Input          : bEpNum: Endpoint Number. 
+S*                  wState: new state.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPRxStatus(uint8_t bEpNum, uint16_t wState)
+S{
+S  _SetEPRxStatus(bEpNum, wState);
+S}
+S
+S/*******************************************************************************
+S* Function Name  : GetEPTxStatus
+S* Description    : Returns the endpoint Tx status.
+S* Input          : bEpNum: Endpoint Number. 
+S* Output         : None.
+S* Return         : Endpoint TX Status
+S*******************************************************************************/
+Suint16_t GetEPTxStatus(uint8_t bEpNum) 
+S{
+S  return(_GetEPTxStatus(bEpNum));
+S}
+S
+S/*******************************************************************************
+S* Function Name  : GetEPRxStatus
+S* Description    : Returns the endpoint Rx status.
+S* Input          : bEpNum: Endpoint Number. 
+S* Output         : None.
+S* Return         : Endpoint RX Status
+S*******************************************************************************/
+Suint16_t GetEPRxStatus(uint8_t bEpNum) 
+S{
+S  return(_GetEPRxStatus(bEpNum));
+S}
+S
+S/*******************************************************************************
+S* Function Name  : SetEPTxValid
+S* Description    : Valid the endpoint Tx Status.
+S* Input          : bEpNum: Endpoint Number.  
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPTxValid(uint8_t bEpNum)
+S{
+S  _SetEPTxStatus(bEpNum, EP_TX_VALID);
+S}
+S
+S/*******************************************************************************
+S* Function Name  : SetEPRxValid
+S* Description    : Valid the endpoint Rx Status.
+S* Input          : bEpNum: Endpoint Number. 
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPRxValid(uint8_t bEpNum)
+S{
+S  _SetEPRxStatus(bEpNum, EP_RX_VALID);
+S}
+S
+S/*******************************************************************************
+S* Function Name  : GetTxStallStatus
+S* Description    : Returns the Stall status of the Tx endpoint.
+S* Input          : bEpNum: Endpoint Number. 
+S* Output         : None.
+S* Return         : Tx Stall status.
+S*******************************************************************************/
+Suint16_t GetTxStallStatus(uint8_t bEpNum)
+S{
+S  return(_GetTxStallStatus(bEpNum));
+S}
+S
+S/*******************************************************************************
+S* Function Name  : GetRxStallStatus
+S* Description    : Returns the Stall status of the Rx endpoint. 
+S* Input          : bEpNum: Endpoint Number. 
+S* Output         : None.
+S* Return         : Rx Stall status.
+S*******************************************************************************/
+Suint16_t GetRxStallStatus(uint8_t bEpNum)
+S{
+S  return(_GetRxStallStatus(bEpNum));
+S}
+S
+S/*******************************************************************************
+S* Function Name  : SetEPTxCount.
+S* Description    : Set the Tx count.
+S* Input          : bEpNum: Endpoint Number.
+S*                  wCount: new count value.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPTxCount(uint8_t bEpNum, uint16_t wCount)
+S{
+S}
+S
+S/*******************************************************************************
+S* Function Name  : SetEPRxCount
+S* Description    : Set the Rx count.
+S* Input          : bEpNum: Endpoint Number. 
+S*                  wCount: the new count value.
+S* Output         : None.
+S* Return         : None.
+S*******************************************************************************/
+Svoid SetEPRxCount(uint8_t bEpNum, uint16_t wCount)
+S{ 
+S}
+S
+S/*******************************************************************************
+S* Function Name  : ToWord
+S* Description    : merge two byte in a word.
+S* Input          : bh: byte high, bl: bytes low.
+S* Output         : None.
+S* Return         : resulted word.
+S*******************************************************************************/
+Suint16_t ToWord(uint8_t bh, uint8_t bl)
+S{
+S  uint16_t wRet = 0;
+S  wRet = (uint16_t)bl | ((uint16_t)bh << 8);
+S  return(wRet);
+S}
+S
+S/*******************************************************************************
+S* Function Name  : ByteSwap
+S* Description    : Swap two byte in a word.
+S* Input          : wSwW: word to Swap.
+S* Output         : None.
+S* Return         : resulted word.
+S*******************************************************************************/
+Suint16_t ByteSwap(uint16_t wSwW)
+S{
+S  uint8_t bTemp = 0;
+S  uint16_t wRet = 0;
+S  
+S  bTemp = (uint8_t)(wSwW & 0xff);
+S  wRet =  (wSwW >> 8) | ((uint16_t)bTemp << 8);
+S  return(wRet);
+S}
+S
+N#endif /* STM32F10X_CL */
+N/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

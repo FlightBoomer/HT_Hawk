@@ -365,7 +365,7 @@
               <MiscControls>--c99</MiscControls>
               <Define>STM32F10X_HD, USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Libraries\CMSIS\CM3\CoreSupport;..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\..\Libraries\STM32_USB-FS-Device_Driver\inc;..\..\User\usb_virture_com;..\..\User;..\..\User\bsp;..\..\User\Driver\IIC;..\..\User\Driver\LED;..\..\User\Driver\TIM;..\..\User\Driver\SPI;..\..\User\Driver\ADC;..\..\User\Driver\Delay;..\..\User\Driver\UART;..\..\User\Driver\MOTOR;..\..\User\Driver\PWM_IN;..\..\User\Driver\EEPROM;..\..\User\Modules\Modules_mpu6050;..\..\User\Modules\Modules_nrf24L01;..\..\User\Modules\Modules_hmc5883;..\..\User\Algorithm\Algorithm_filter;..\..\User\Algorithm\Algorithm_math;..\..\User\Algorithm\Algorithm_sqLite;..\..\User\Algorithm\Algorithm_quaternion;..\..\User\Function\MultiRotor_rc;..\..\User\Function\MultiRotor_app;..\..\User\Function\MultiRotor_ahrs;..\..\User\Function\MultiRotor_radio;..\..\User\Function\MultiRotor_control;..\..\User\Modules\Modules_oled;..\..\User\Driver\STMFLASH;..\..\User\Modules\Modules_ms5611;..\..\User\Function\MultiRotor_altitute;..\..\User\Modules\GPS;..\..\User\Modules\Modules_ultrasonic;..\..\User\ANO_DT;..\..\User\Heigh</IncludePath>
+              <IncludePath>..\..\Libraries\CMSIS\CM3\CoreSupport;..\..\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;..\..\Libraries\STM32F10x_StdPeriph_Driver\inc;..\..\Libraries\STM32_USB-FS-Device_Driver\inc;..\..\User\usb_virture_com;..\..\User;..\..\User\bsp;..\..\User\Driver\IIC;..\..\User\Driver\LED;..\..\User\Driver\TIM;..\..\User\Driver\SPI;..\..\User\Driver\ADC;..\..\User\Driver\Delay;..\..\User\Driver\UART;..\..\User\Driver\MOTOR;..\..\User\Driver\PWM_IN;..\..\User\Driver\EEPROM;..\..\User\Modules\Modules_mpu6050;..\..\User\Modules\Modules_nrf24L01;..\..\User\Modules\Modules_hmc5883;..\..\User\Algorithm\Algorithm_filter;..\..\User\Algorithm\Algorithm_math;..\..\User\Algorithm\Algorithm_sqLite;..\..\User\Algorithm\Algorithm_quaternion;..\..\User\Function\MultiRotor_rc;..\..\User\Function\MultiRotor_app;..\..\User\Function\MultiRotor_ahrs;..\..\User\Function\MultiRotor_radio;..\..\User\Function\MultiRotor_control;..\..\User\Modules\Modules_oled;..\..\User\Driver\STMFLASH;..\..\User\Modules\Modules_ms5611;..\..\User\Function\MultiRotor_altitute;..\..\User\Modules\GPS;..\..\User\Modules\Modules_ultrasonic;..\..\User\ANO_DT;..\..\User\Heigh;..\..\User\Algorithm\ekf2</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -717,6 +717,26 @@
               <FileName>mymath.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\User\Algorithm\Algorithm_math\mymath.h</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.c</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.h</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF_types.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF_types.h</FilePath>
+            </File>
+            <File>
+              <FileName>rtwtypes.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\rtwtypes.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -1527,6 +1547,26 @@
               <FileType>5</FileType>
               <FilePath>..\..\User\Algorithm\Algorithm_math\mymath.h</FilePath>
             </File>
+            <File>
+              <FileName>AttitudeEKF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.c</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.h</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF_types.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF_types.h</FilePath>
+            </File>
+            <File>
+              <FileName>rtwtypes.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\rtwtypes.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -2335,6 +2375,26 @@
               <FileName>mymath.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\User\Algorithm\Algorithm_math\mymath.h</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.c</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF.h</FilePath>
+            </File>
+            <File>
+              <FileName>AttitudeEKF_types.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\AttitudeEKF_types.h</FilePath>
+            </File>
+            <File>
+              <FileName>rtwtypes.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\User\Algorithm\ekf2\rtwtypes.h</FilePath>
             </File>
           </Files>
         </Group>
