@@ -1,0 +1,25 @@
+#include "include.h"
+
+#define FLASH_SAVE_ADDR  0X08070000 				//设置FLASH 保存地址(必须为偶数)
+/*
+static void EE_READ_ACC_OFFSET(void)
+{
+	STMFLASH_Read(FLASH_SAVE_ADDR,(u16*)&ACC_OFFSET.X,1);
+	STMFLASH_Read(FLASH_SAVE_ADDR+2,(u16*)&ACC_OFFSET.Y,1);
+  STMFLASH_Read(FLASH_SAVE_ADDR+4,(u16*)&ACC_OFFSET.Z,1);
+}
+void EE_SAVE_ACC_OFFSET(void)
+{
+  STMFLASH_Write(FLASH_SAVE_ADDR,(u16*)&ACC_OFFSET.X,1);
+	STMFLASH_Write(FLASH_SAVE_ADDR+2,(u16*)&ACC_OFFSET.Y,1);
+	STMFLASH_Write(FLASH_SAVE_ADDR+4,(u16*)&ACC_OFFSET.Z,1);
+}	
+
+
+
+
+void Read_Flah(void)
+{
+     EE_READ_ACC_OFFSET();
+}
+*/

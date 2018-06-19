@@ -1,0 +1,28 @@
+#ifndef __EKF_H
+#define __EKF_H
+
+#include <math.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include "rt_strap.h"
+
+/* Function Declarations */
+extern void qkf_run(double X[7], double P[49], const double acc[3],
+                               const double gyro[3], const double mag[3], double dt, const double Q[49],
+                               const double R[36]);
+extern void qkf_initialize(void);
+
+extern void mrdivide(double A[42], const double B[36]);
+extern void my_ang2quat(const double ang[3], double q[4]);
+extern void my_calcH(double bx, double bz, double q0, double q1, double q2,
+                     double q3, double H[42]);
+extern void my_quat2att(const double q_data[4], const int q_size[2], double *roll,
+                        double *pitch, double *yaw);
+extern void my_quat2cbn(const double q[4], double cbn[9]);
+extern void my_quatmul(const double q1[4], const double q2[4], double q[4]);
+extern double norm(const double x[4]);
+
+
+
+#endif	// __EKF_H

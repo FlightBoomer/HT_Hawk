@@ -1,0 +1,6 @@
+*.o
+*.obj
+*.lst
+
+Project/MDK-ARM(uV5)/Flash/List/
+Project/MDK-ARM(uV5)/Flash/List/.
